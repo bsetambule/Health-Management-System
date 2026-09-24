@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <title>User Details</title>
+    <link href="{{ url_for('static', filename='styles/adminViewUser.css') }}" rel="stylesheet" />
+    <script>
+        try {
+            if (localStorage.getItem("darkMode") === "enabled") {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        } catch (e) { }
+    </script>
+</head>
+
+<body>
+
+    <!-- Flash Message Section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- TOP NAV -->
+    <div class="topbar">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="#">
+                <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <!-- Hamburger Button for Mobile -->
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="{{ url_for('admin.admin_dash') }}">Dashboard</a>
+            <a href="{{ url_for('admin.admin_users') }}" class="active">Users</a>
+            <a href="{{ url_for('admin.admin_centers') }}">Centers</a>
+            <a href="{{ url_for('admin.admin_reports') }}">Reports</a>
+
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+            <!-- Dark Mode Toggle -->
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle" class="toggle-switch"></label>
+                <span class="toggle-text">Dark Mode</span>
+            </div>
+        </div>
+
+
+        <div class="main">
+
+
+            <section>
+                <div class="backBtn">
+                    <a class="backButton" href="{{ url_for('admin.admin_users') }}">
+                        ← Back to Users
+                    </a>
+                </div>
+            </section>
+
+            <section>
+                <h2>User Profile</h2>
+            </section>
+
+            <br>
+
+            <section>
+
+
+                <div class="button-container">
+                    <!-- Form for Deactivating Center -->
+                    <form method="POST" action="{{ url_for('admin.deactivate_user_route', user_id=user.id) }}">
+                        {% if user.isActive %}
+                        <button type="submit" class="deactivateAccountBtn">
+                            Deactivate User
+                        </button>
+                        {% else %}
+                        <button type="submit" class="deactivatedAccountBtn" disabled>
+                            User is already deactivated
+                        </button>
+                        {% endif %}
+                    </form>
+
+                    <br>
+
+                    <!-- Form for Activating Center -->
+                    <form method="POST" action="{{ url_for('admin.activate_user_route', user_id=user.id) }}">
+                        {% if not user.isActive %}
+                        <button type="submit" class="activateAccountBtn">
+                            Activate User
+                        </button>
+                        {% else %}
+                        <button type="submit" class="activatedAccountBtn" disabled>
+                            User is already active
+                        </button>
+                        {% endif %}
+                    </form>
+
+                    <form method="POST" action="{{ url_for('admin.admin_reset_user_password', user_id=user.id) }}">
+                        <button class="resetPasswordBtn">
+                            Reset Password
+                        </button>
+                    </form>
+
+                    <!--Form for Editing User-->
+                    <form method="POST" action="{{url_for('admin.edit_user', user_id=user.id)}}">
+                        <button class="editUserBtn">
+                            Edit User Details
+                        </button>
+                    </form>
+            </section>
+
+            <section class="form-card">
+                <form class="adminView-form" method="POST">
+                    <p><strong>User ID:</strong> {{ user.userID }}</p>
+                    <p><strong>Name:</strong> {{ user.firstname }} {{ user.lastname }}</p>
+                    <p><strong>Username:</strong> {{ user.username }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Date of Creation:</strong> {{ user.created_at }}</p>
+                    <p><strong>Center:</strong> {{ user.center.centerName }}</p>
+                    <p><strong>User Role:</strong> {{ user.role }}</p>
+                    <p><strong>Status:</strong> {{ 'Active' if user.isActive else 'Inactive' }}</p>
+                </form>
+            </section>
+
+            <section>
+                <h3>Audit Logs</h3>
+            </section>
+
+
+
+            <input type="text" id="adminUsersSearch" placeholder="Search log by ID or date..."
+                onkeyup="filterTable('adminUsersSearch', 'userLogs')">
+
+            <br><br>
+            <!---
+            <a class="adminUserViewLink" href="{{ url_for('admin.view_audit_logs', user_id=user.id) }}">View Audit
+                Logs</a>
+--->
+
+            <!-- No results found message -->
+            <div id="noResultsMessage" style="display:none; color: red; text-align: center;">
+                No results found.
+            </div>
+            <div class="table-wrapper">
+                <table id="userLogs">
+
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Target</th>
+                            <th>Timestamp</th>
+                            <th>Initiator</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for auditlog in auditlogs.items %}
+                        <tr>
+                            <td>{{ auditlog.action if auditlog.action else "No Action" }}</td>
+                            <td>{{ auditlog.entity if auditlog.entity else "No Entity" }}</td>
+                            <td>{{ auditlog.timestamp.strftime('%Y-%m-%d %H:%M:%S') if auditlog.timestamp else "No
+                                Timestamp" }}</td>
+                            <td>{{ auditlog.userID if auditlog.userID else "No Initiator" }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">No data found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+               
+            </div>
+             <!-- Pagination -->
+                <div class="pagination">
+                    {% if auditlogs.has_prev %}
+                    <a href="{{ url_for('admin.admin_reports', page=auditlogs.prev_num) }}">← Previous</a>
+                    {% endif %}
+
+                    <span>Page {{ auditlogs.page }} of {{ auditlogs.pages }}</span>
+
+                    {% if auditlogs.has_next %}
+                    <a href="{{ url_for('admin.admin_reports', page=auditlogs.next_num) }}">Next →</a>
+                    {% endif %}
+                </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="indexFooter">
+        <div class="footer-logo">
+            <a href="#">
+                <img id="footerLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <div class="footer-links">
+            <nav>
+                <h4>Important Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('admin.admin_dash')}}">Home</a></li>
+                    <li><a href="#">Users</a></li>
+                    <li><a href="{{ url_for('admin.admin_centers') }}">Centers</a></li>
+                    <li><a href="{{ url_for('admin.admin_reports') }}">Reports</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <hr>
+
+        <div class="copyright">
+            <p>© SetOhil 2026</p>
+        </div>
+    </footer>
+
+    <!--INACTIVITY SCRIPT-->
+    <script>
+        let inactivityTime = function () {
+            let timer;
+
+            // Function to logout after inactivity
+            const logout = () => {
+                window.location.href = "/logout";  // Redirect to logout
+            }
+
+            // Function to reset the inactivity timer
+            const resetTimer = () => {
+                clearTimeout(timer);
+                // Send request to keep the session alive
+                fetch("/keep_alive");
+                // Reset inactivity timer (logout after 10 minutes of inactivity)
+                timer = setTimeout(logout, 10 * 60 * 1000);  // 10 minutes
+            }
+
+            // Listen to various user events to reset the inactivity timer
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeydown = resetTimer;
+            document.onscroll = resetTimer;
+            document.onclick = resetTimer;
+        };
+
+        inactivityTime();  // Initialize the inactivity timer
+    </script>
+
+
+
+    <!--Search-->
+    <script>
+        function filterTable(inputId, tableId) {
+            const input = document.getElementById(inputId);
+            const tokens = input.value
+                .toLowerCase()
+                .trim()
+                .split(/\s+/); // Split by spaces
+
+            const table = document.getElementById(tableId);
+            const rows = table.getElementsByTagName("tr");
+
+            let noMatchFound = true; // Track if any row matches the search
+
+            // Iterate through the rows (skip the header)
+            for (let i = 1; i < rows.length; i++) {
+                const rowText = rows[i].textContent.toLowerCase();
+                const match = tokens.every(token => rowText.includes(token));
+
+                if (match) {
+                    rows[i].style.display = "";  // Show row if matched
+                    noMatchFound = false;  // Found a match
+                } else {
+                    rows[i].style.display = "none";  // Hide row if not matched
+                }
+            }
+
+            // Show "No results found" message if no rows match
+            const noResultsMessage = document.getElementById("noResultsMessage");
+            if (noMatchFound) {
+                noResultsMessage.style.display = "block";  // Display message
+            } else {
+                noResultsMessage.style.display = "none";  // Hide message
+            }
+        }
+    </script>
+
+
+    <!-- JavaScript for Auto Dismiss Flash Message -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                // Auto-dismiss after 4 seconds
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                // Manual close
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+    <!-- JavaScript for Dark Mode Toggle, Hamburger Menu, and Auto Dismiss Flash Message -->
+    <script>
+        const darkToggle = document.getElementById("darkModeToggle");
+        const logo = document.getElementById("siteLogo");
+        const footerLogo = document.getElementById("footerLogo");
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Update logos based on dark mode
+        function updateLogo() {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            logo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+            footerLogo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+        }
+
+        // Dark Mode Toggle
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            darkToggle.checked = true;
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+
+        updateLogo();
+
+        darkToggle.addEventListener("change", () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+            localStorage.setItem("darkMode", isDark ? "disabled" : "enabled");
+
+            updateLogo();
+        });
+
+        // Hamburger Menu Toggle for smaller screens
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            hamburger.classList.toggle("active");
+        });
+    </script>
+
+</body>
+
+</html>

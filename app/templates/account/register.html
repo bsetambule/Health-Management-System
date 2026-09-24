@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <link href="{{ url_for('static', filename='styles/account.css') }}" rel="stylesheet" />
+</head>
+
+<body>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Header -->
+    <div class="top-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="{{ url_for('auth.home') }}">
+                    <img src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="logo">
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <br>
+    <!-- Registration Form -->
+    <main>
+        <section id="createAccount">
+            <h2>Create your account</h2>
+
+            <form id="createAccount-form" method="POST" action="{{ url_for('auth.register') }}">
+
+                <div class="CreateAccountContainer">
+
+                    <div class="createAccountField">
+                        <label for="firstName">First Name</label>
+                        <input type="text" name="firstName" id="firstName" required>
+                    </div>
+
+                    <div class="createAccountField">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" name="lastName" id="lastName" required>
+                    </div>
+
+                    <div class="createAccountField">
+                        <label for="phoneNumber">Phone Number</label>
+                        <div class="phone-input">
+                            <span id="country-code">+267</span>
+                            <input type="tel" id="phoneNumber" name="phoneNumber" pattern="7[0-9]{7}" maxlength="8"
+                                inputmode="numeric" required>
+                        </div>
+                        <small id="phoneError" style="color: #ff0000;"></small>
+                    </div>
+
+                    <div class="createAccountField">
+                        <label for="omangNumber">Omang Number</label>
+                        <input type="text" name="omangNumber" id="omangNumber" pattern="[0-9]{7,9}" maxlength="9"
+                            inputmode="numeric" required>
+                        <small id="omangError" style="color: #ff0000;"></small>
+                    </div>
+
+                    <div class="createAccountField">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required>
+                        <small id="emailError" style="color:red;"></small>
+                    </div>
+                    <br>
+                    <button type="submit" id="CreateAccountBtn">Create Account</button>
+                    <br><br>
+                    <p class="signInLink">
+                        Have an account? <a class="signIn" href="{{ url_for('auth.login') }}">Sign In</a>
+                    </p>
+                    <br>
+                    <p class="TermsAndPolicyLink">
+                        By creating an account you agree to our <a href="#" class="TermsLink">Terms of Use</a>
+                        and <a href="#" class="PrivacyLink">Privacy Policy</a>
+                    </p>
+
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <!-- JS Validation -->
+
+    <script>
+        const omangInput = document.getElementById("omangNumber");
+        const omangError = document.getElementById("omangError");
+
+        omangInput.addEventListener("input", () => {
+            const value = omangInput.value.trim();
+
+            // Regex: exactly 9 digits
+            if (!/^\d{9}$/.test(value)) {
+                omangError.textContent = "Omang Number must be exactly 9 digits, numbers only.";
+                omangInput.setCustomValidity("Invalid Omang Number");
+            } else {
+                omangError.textContent = "";
+                omangInput.setCustomValidity(""); // reset validity
+            }
+        });
+    </script>
+
+
+    <script>
+        const phoneInput = document.getElementById("phoneNumber");
+        const phoneError = document.getElementById("phoneError");
+
+        phoneInput.addEventListener("input", () => {
+            const value = phoneInput.value.trim();
+
+            // Check if it starts with 7
+            if (!/^7\d{7}$/.test(value)) {
+                phoneError.textContent = "Phone number must start with 7 and be exactly 8 digits.";
+                phoneInput.setCustomValidity("Invalid phone number");
+            } else {
+                phoneError.textContent = "";
+                phoneInput.setCustomValidity(""); // reset validity
+            }
+        });
+    </script>
+
+
+
+    <script>
+        // Flash close
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+            flashes.forEach(flash => {
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+
+
+
+            // Email validation
+            const email = document.getElementById("email");
+            const emailError = document.getElementById("emailError");
+            email.addEventListener("input", () => {
+                if (email.validity.typeMismatch) {
+                    emailError.textContent = "Please enter a valid email address";
+                } else {
+                    emailError.textContent = "";
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

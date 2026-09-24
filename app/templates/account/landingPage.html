@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <link href="{{ url_for('static', filename='styles/landingPage.css') }}" rel="stylesheet" />
+</head>
+
+<body>
+
+    <!-- TOP NAVIGATION -->
+    <div class="top-nav">
+        <div class="nav-container">
+
+            <!-- Logo -->
+            <div class="logo">
+                <a href="#">
+                    <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+                </a>
+            </div>
+
+            <!-- Desktop / Mobile Menu -->
+            <nav class="navigation-list">
+                <ul>
+                    <li><a class="signIn" href="{{ url_for('auth.login') }}">Sign In</a></li>
+                    <li><a class="createAccount" href="{{ url_for('auth.register') }}">Create Account</a></li>
+                </ul>
+            </nav>
+
+            <!-- Dark Mode Toggle -->
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle" class="toggle-label"></label>
+            </div>
+
+            <!-- Hamburger -->
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MAIN SECTION / HERO -->
+    <main>
+        <section id="header-background">
+            <h1>Digital Care. Real Health</h1>
+            <p>
+                Combining intelligent technology with seamless design, our platform makes digital care simple, fast and
+                personal. Empowering you to take control of your health anytime, anywhere.
+            </p>
+            <div class="createAccountBtn">
+                <a class="createAccount" href="{{ url_for('auth.register') }}">Join Now</a>
+            </div>
+        </section>
+
+        <section class="features-section">
+            <h2>Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-box">
+                    <h3>Smart Health Tracking</h3>
+                    <p>Monitor progress, prescriptions and appointments.</p>
+                </div>
+                <div class="feature-box">
+                    <h3>Health at Your Fingertips</h3>
+                    <p>Access your records anytime, anywhere.</p>
+                </div>
+                <div class="feature-box">
+                    <h3>Smart Reminders</h3>
+                    <p>Receive timely alerts for upcoming appointments.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="indexFooter">
+        <div class="footer-logo">
+            <a href="#">
+                <img id="footerLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <div class="footer-links">
+            <nav>
+                <h4>Important Links</h4>
+                <ul>
+                    <li><a href="#">About us</a></li>
+                    <li><a href="#">Contact us</a></li>
+                    <li><a href="{{ url_for('auth.login') }}">Sign In</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">Create Account</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <hr>
+
+        <div class="copyright">
+            <p>© SetOhil 2026</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const darkToggle = document.getElementById("darkModeToggle");
+        const logo = document.getElementById("siteLogo");
+        const footerLogo = document.getElementById("footerLogo");
+        const hamburger = document.getElementById("hamburger");
+        const navList = document.querySelector(".navigation-list");
+
+        // Update logos based on dark mode
+        function updateLogo() {
+            if (document.body.classList.contains("dark-mode")) {
+                logo.src = "{{ url_for('static', filename='images/logo2.png') }}";
+                footerLogo.src = "{{ url_for('static', filename='images/logo2.png') }}";
+            } else {
+                logo.src = "{{ url_for('static', filename='images/logo4.jpeg') }}";
+                footerLogo.src = "{{ url_for('static', filename='images/logo4.jpeg') }}";
+            }
+        }
+
+        // Load dark mode preference on page load
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.body.classList.add("dark-mode");
+            darkToggle.checked = true;
+            updateLogo();
+        }
+
+        // Toggle dark mode
+        darkToggle.addEventListener("change", () => {
+            document.body.classList.toggle("dark-mode");
+            updateLogo();
+            localStorage.setItem("darkMode", document.body.classList.contains("dark-mode") ? "enabled" : "disabled");
+        });
+
+        // Hamburger toggle
+        hamburger.addEventListener("click", () => {
+            hamburger.classList.toggle("active");
+            navList.classList.toggle("open");
+        });
+
+        // Close menu when clicking a link
+        navList.querySelectorAll("a").forEach(link => {
+            link.addEventListener("click", () => {
+                hamburger.classList.remove("active");
+                navList.classList.remove("open");
+            });
+        });
+    </script>
+
+</body>
+</html>

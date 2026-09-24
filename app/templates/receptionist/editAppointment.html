@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Appointment Details</title>
+    <link href="{{url_for('static', filename='styles/reception.css')}}" rel="stylesheet" />
+    <script>
+        try {
+            if (localStorage.getItem("darkMode") === "enabled") {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        } catch (e) { }
+    </script>
+</head>
+
+<body>
+
+    <!-- Flash Message Section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+
+    <!-- TOP NAV -->
+    <div class="topbar">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="#">
+                <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <!-- Hamburger Button for Mobile -->
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="{{ url_for('reception.reception_dash') }}">Dashboard</a>
+            <a class="active" href="{{ url_for('reception.reception_appointments') }}">Appointments</a>
+            <a href="{{ url_for('reception.reception_patients') }}">Patients</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+            <!-- Dark Mode Toggle -->
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle" class="toggle-switch"></label>
+                <span class="toggle-text">Dark Mode</span>
+            </div>
+        </div>
+
+        <div class="main">
+            <section>
+                <h2>Edit Appointment Details</h2>
+            </section>
+
+            <br>
+
+            <section class="form-card">
+                <form class="appointment-form" method="POST"
+                    action="{{ url_for('reception.reception_editAppointment', appointmentID=appointment.appointmentID) }}">
+
+
+                    <!-- Patient (locked) -->
+                    <label>Patient</label>
+                    <p>
+                        {{ patient.user.firstname }}
+                        {{ patient.user.lastname }}
+                        ({{ patient.user.phonenumber }})
+                    </p>
+                    <br>
+                    <!-- Doctor selection -->
+                    <label>Doctor</label>
+                    <select name="doctor_id" required>
+                        <option value="">Select doctor</option>
+                        {% for doctor in doctors %}
+                        <option value="{{ doctor.id }}" {% if doctor.id==appointment.doctorID %}selected{% endif %}>
+                            Dr. {{ doctor.firstname }} {{ doctor.lastname }}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <!-- Appointment date -->
+                    <label>Appointment Date</label>
+                    <input type="date" name="appDate" required min="{{ min_date }}"
+                        value="{{ appointment.appointmentDateTime.strftime('%Y-%m-%d') }}">
+
+                    <!-- Notes -->
+                    <label>Notes (optional)</label>
+                    <textarea name="appNotes" rows="3">{{ appointment.appointmentNotes or "" }}
+                    </textarea>
+
+                    <label>Appointment Status</label>
+                    <select name="status" id="status" required onchange="toggleCancellationReason()">
+                        <option value="SCHEDULED" {% if appointment.status=="SCHEDULED" %}selected{% endif %}>Scheduled
+                        </option>
+                        <option value="COMPLETED" {% if appointment.status=="COMPLETED" %}selected{% endif %}>Completed
+                        </option>
+                        <option value="CANCELLED" {% if appointment.status=="CANCELLED" %}selected{% endif %}>Cancelled
+                        </option>
+                        <option value="NO_SHOW" {% if appointment.status=="NO_SHOW" %}selected{% endif %}>No Show
+                        </option>
+                    </select>
+
+                    <br>
+                    <div id="cancellationReasonDiv" class="cancellationhidden">
+                        <label>Cancellation Reason</label>
+                        <textarea name="cancellation_reason"
+                            rows="2">{{ appointment.cancellation_reason or "" }}</textarea>
+                    </div>
+
+                    <br>
+
+                    <button class="createAppointmentBtn" type="submit">
+                        Update Appointment
+                    </button>
+
+                    <a class="cancelBtn"
+                        href="{{ url_for('reception.reception_appointmentView', appointmentID=appointment.appointmentID) }}">
+                        Cancel
+                    </a>
+
+                </form>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="indexFooter">
+        <div class="footer-logo">
+            <a href="#">
+                <img id="footerLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <div class="footer-links">
+            <nav>
+                <h4>Important Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('reception.reception_dash') }}">Dashboard</a></li>
+                    <li><a href="#">Appointments</a></li>
+                    <li><a href="{{ url_for('reception.reception_patients') }}">Patients</a></li>
+
+                </ul>
+            </nav>
+        </div>
+
+        <hr>
+
+        <div class="copyright">
+            <p>© SetOhil 2026</p>
+        </div>
+    </footer>
+
+
+    <!-- JS to toggle cancellation reason -->
+    <script>
+        const statusSelect = document.getElementById('appointmentStatus');
+        const cancellationDiv = document.getElementById('cancellationReasonDiv');
+
+        function toggleCancellationReason() {
+            if (statusSelect.value === 'CANCELLED') {
+                cancellationDiv.classList.remove('hidden');
+            } else {
+                cancellationDiv.classList.add('hidden');
+            }
+        }
+
+        // Run on page load
+        toggleCancellationReason();
+
+        // Run on status change
+        statusSelect.addEventListener('change', toggleCancellationReason);
+    </script>
+
+
+
+    <!-- JavaScript for Auto Dismiss Flash Message -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                // Auto-dismiss after 4 seconds
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                // Manual close
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+
+    <!-- JavaScript for Dark Mode Toggle, Hamburger Menu, and Auto Dismiss Flash Message -->
+    <script>
+        const darkToggle = document.getElementById("darkModeToggle");
+        const logo = document.getElementById("siteLogo");
+        const footerLogo = document.getElementById("footerLogo");
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Update logos based on dark mode
+        function updateLogo() {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            logo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+            footerLogo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+        }
+
+        // Dark Mode Toggle
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            darkToggle.checked = true;
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+
+        updateLogo();
+
+        darkToggle.addEventListener("change", () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+            localStorage.setItem("darkMode", isDark ? "disabled" : "enabled");
+
+            updateLogo();
+        });
+
+        // Hamburger Menu Toggle for smaller screens
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            hamburger.classList.toggle("active");
+        });
+    </script>
+
+    <!--INACTIVITY SCRIPT-->
+    <script>
+        let inactivityTime = function () {
+            let timer;
+
+            // Function to logout after inactivity
+            const logout = () => {
+                window.location.href = "/logout";  // Redirect to logout
+            }
+
+            // Function to reset the inactivity timer
+            const resetTimer = () => {
+                clearTimeout(timer);
+                // Send request to keep the session alive
+                fetch("/keep_alive");
+                // Reset inactivity timer (logout after 10 minutes of inactivity)
+                timer = setTimeout(logout, 10 * 60 * 1000);  // 10 minutes
+            }
+
+            // Listen to various user events to reset the inactivity timer
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeydown = resetTimer;
+            document.onscroll = resetTimer;
+            document.onclick = resetTimer;
+        };
+
+        inactivityTime();  // Initialize the inactivity timer
+    </script>
+
+
+</body>
+
+</html>

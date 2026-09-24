@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Patient Dashboard</title>
+    <link href="{{url_for('static', filename='styles/patient.css')}}" rel="stylesheet" />
+    <script>
+        try {
+            if (localStorage.getItem("darkMode") === "enabled") {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        } catch (e) { }
+    </script>
+</head>
+
+<body>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- TOP NAV -->
+    <div class="topbar">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="#">
+                <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <!-- Hamburger Button for Mobile -->
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="{{ url_for('patient.patient_dash') }}" class="active">Dashboard</a>
+            <a href="{{ url_for('patient.patient_appointments') }}">Appointments</a>
+            <a href="{{ url_for('patient.patient_diagnoses') }}">Diagnosis</a>
+            <a href="{{ url_for('patient.patient_prescriptions') }}">Prescriptions</a>
+            <a href="{{ url_for('patient.patient_account') }}">Account</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+            <!-- Dark Mode Toggle -->
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle" class="toggle-switch"></label>
+                <span class="toggle-text">Dark Mode</span>
+            </div>
+        </div>
+
+
+        <div class="main">
+            <section>
+                <h2>Patient Dashboard</h2>
+            </section>
+            <br>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>Appointments Today</h3>
+                    <p>{{ appointments_today}}</p>
+                </div>
+            </div>
+            <br>
+
+            <section>
+                <h3>Today’s Appointments</h3>
+                <br>
+                <div class="table-wrapper">
+                    <table id="appointmentsTable">
+                        <thead>
+                            <tr>
+
+                                <th>Date</th>
+                                <th>Center</th>
+                                <th>Doctor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if appointments %}
+                            {% for appointment in appointments %}
+                            <tr>
+                                <td>{{ appointment.appointmentDateTime.strftime('%Y-%m-%d') }}</td>
+
+                                <!-- Use hospital name if available -->
+                                <td>
+                                    {% if appointment.patient.hospital %}
+                                    {{ appointment.patient.hospital.centerName }}
+                                    {% else %}
+                                    N/A
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if appointment.doctor %}
+                                    Dr. {{ appointment.doctor.firstname }} {{ appointment.doctor.lastname }}
+                                    {% else %}
+                                    N/A
+                                    {% endif %}
+                                </td>
+
+                                <td>{{ appointment.status.value if appointment.status }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="4" style="text-align:center;">No appointments found for today.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </section>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="indexFooter">
+        <div class="footer-logo">
+            <a href="#">
+                <img id="footerLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <div class="footer-links">
+            <nav>
+                <h4>Important Links</h4>
+                <ul>
+                    <li><a href="#">Dashboard</a></li>
+                    <li><a href="{{ url_for('patient.patient_appointments') }}">Appointments</a></li>
+                    <li><a href="{{ url_for('patient.patient_diagnoses') }}">Diagnosis</a></li>
+                    <li><a href="{{ url_for('patient.patient_prescriptions') }}">Prescriptions</a></li>
+                    <li><a href="{{ url_for('patient.patient_account') }}">Account</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <hr>
+
+        <div class="copyright">
+            <p>© SetOhil 2026</p>
+        </div>
+    </footer>
+
+
+    <!-- JavaScript for Auto Dismiss Flash Message -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                // Auto-dismiss after 4 seconds
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                // Manual close
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+
+    <!-- JavaScript for Dark Mode Toggle, Hamburger Menu, and Auto Dismiss Flash Message -->
+    <script>
+        const darkToggle = document.getElementById("darkModeToggle");
+        const logo = document.getElementById("siteLogo");
+        const footerLogo = document.getElementById("footerLogo");
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Update logos based on dark mode
+        function updateLogo() {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            logo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+            footerLogo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+        }
+
+        // Dark Mode Toggle
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            darkToggle.checked = true;
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+
+        updateLogo();
+
+        darkToggle.addEventListener("change", () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+            localStorage.setItem("darkMode", isDark ? "disabled" : "enabled");
+
+            updateLogo();
+        });
+
+        // Hamburger Menu Toggle for smaller screens
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            hamburger.classList.toggle("active");
+        });
+    </script>
+
+    <!--INACTIVITY SCRIPT-->
+    <script>
+        let inactivityTime = function () {
+            let timer;
+
+            // Function to logout after inactivity
+            const logout = () => {
+                window.location.href = "/logout";  // Redirect to logout
+            }
+
+            // Function to reset the inactivity timer
+            const resetTimer = () => {
+                clearTimeout(timer);
+                // Send request to keep the session alive
+                fetch("/keep_alive");
+                // Reset inactivity timer (logout after 10 minutes of inactivity)
+                timer = setTimeout(logout, 10 * 60 * 1000);  // 10 minutes
+            }
+
+            // Listen to various user events to reset the inactivity timer
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeydown = resetTimer;
+            document.onscroll = resetTimer;
+            document.onclick = resetTimer;
+        };
+
+        inactivityTime();  // Initialize the inactivity timer
+    </script>
+
+</body>
+
+</html>

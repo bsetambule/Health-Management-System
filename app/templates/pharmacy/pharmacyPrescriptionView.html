@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Prescription View</title>
+    <link href="{{url_for('static', filename='styles/pharmacy.css')}}" rel="stylesheet" />
+    <script>
+        try {
+            if (localStorage.getItem("darkMode") === "enabled") {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        } catch (e) { }
+    </script>
+</head>
+
+<body>
+
+    <!-- Flash Message Section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+
+    <!-- TOP NAV -->
+    <div class="topbar">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="#">
+                <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <!-- Hamburger Button for Mobile -->
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="{{ url_for('pharmacy.pharmacy_dash') }}">Dashboard</a>
+            <a href="{{ url_for('pharmacy.pharmacy_prescriptions') }}" class="active">Prescriptions</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+            <!-- Dark Mode Toggle -->
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle" class="toggle-switch"></label>
+                <span class="toggle-text">Dark Mode</span>
+            </div>
+        </div>
+
+
+        <div class="main">
+
+
+            <section>
+                <div class="backBtn">
+                    <a class="backButton" href="{{ url_for('pharmacy.pharmacy_dash') }}">
+                        ← Back to Dashboard
+                    </a>
+                </div>
+            </section>
+
+            <section>
+                <h2>Patient Prescription</h2>
+            </section>
+
+            <section>
+
+                <form method="POST"
+                    action="{{ url_for('pharmacy.dispense_prescription', prescription_id=prescription.prescriptionID) }}">
+
+
+                    <h3>Prescription Information</h3>
+                    <p><strong>Patient:</strong> {{ prescription.patient.user.firstname }} {{
+                        prescription.patient.user.lastname }}</p>
+                    <p><strong>Doctor:</strong> Dr. {{ prescription.doctor.firstname }} {{
+                        prescription.doctor.lastname }}</p>
+                    <p><strong>Date Issued:</strong> {{ prescription.dateIssued.strftime('%Y-%m-%d') }}</p>
+                    <p><strong>Status:</strong> {{ prescription.status.value }}</p>
+
+                    <br>
+
+                    <h3>Medications</h3>
+                    <br>
+                    <div class="table-wrapper">
+                        <table>
+                            <br>
+                            <button type="submit" name="action" value="selected" class="dispenseSelectedBtn">
+                                Dispense Selected
+                            </button>
+
+                            <button type="submit" name="action" value="all" class="dispenseAllBtn">
+                                Dispense All
+                            </button>
+                            <br><br>
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Medication</th>
+                                    <th>Dosage</th>
+                                    <th>Instructions</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detail in prescription.prescriptiondetails %}
+                                <tr>
+                                    <td>
+                                        {% if not detail.isDispensed %}
+                                        <input type="checkbox" name="dispense_ids" value="{{ detail.id }}">
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ detail.medicineName }}</td>
+                                    <td>{{ detail.dosage }}</td>
+                                    <td>{{ detail.instructions }}</td>
+                                    <td>
+                                        {% if detail.isDispensed %}
+                                        Dispensed
+                                        {% else %}
+                                        Pending
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <br>
+
+                </form>
+
+
+            </section>
+
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="indexFooter">
+        <div class="footer-logo">
+            <a href="#">
+                <img id="footerLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <div class="footer-links">
+            <nav>
+                <h4>Important Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('pharmacy.pharmacy_dash') }}">Home</a></li>
+                    <li><a href="#">Prescriptions</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <hr>
+
+        <div class="copyright">
+            <p>© SetOhil 2026</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Auto Dismiss Flash Message -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                // Auto-dismiss after 4 seconds
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                // Manual close
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+
+    <!-- JavaScript for Dark Mode Toggle, Hamburger Menu, and Auto Dismiss Flash Message -->
+    <script>
+        const darkToggle = document.getElementById("darkModeToggle");
+        const logo = document.getElementById("siteLogo");
+        const footerLogo = document.getElementById("footerLogo");
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Update logos based on dark mode
+        function updateLogo() {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            logo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+            footerLogo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+        }
+
+        // Dark Mode Toggle
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            darkToggle.checked = true;
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+
+        updateLogo();
+
+        darkToggle.addEventListener("change", () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+            localStorage.setItem("darkMode", isDark ? "disabled" : "enabled");
+
+            updateLogo();
+        });
+
+        // Hamburger Menu Toggle for smaller screens
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            hamburger.classList.toggle("active");
+        });
+    </script>
+
+    <!-- Search Script -->
+    <script>
+        function filterTable(inputId, tableId) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById(tableId);
+            const rows = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < rows.length; i++) {
+                const rowText = rows[i].textContent.toLowerCase();
+                rows[i].style.display = rowText.includes(filter) ? "" : "none";
+            }
+        }
+    </script>
+
+    <!-- Flash Auto Dismiss -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+
+    <!-- JavaScript for Auto Dismiss Flash Message -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                // Auto-dismiss after 4 seconds
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                // Manual close
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+
+    <!--INACTIVITY SCRIPT-->
+    <script>
+        let inactivityTime = function () {
+            let timer;
+
+            // Function to logout after inactivity
+            const logout = () => {
+                window.location.href = "/logout";  // Redirect to logout
+            }
+
+            // Function to reset the inactivity timer
+            const resetTimer = () => {
+                clearTimeout(timer);
+                // Send request to keep the session alive
+                fetch("/keep_alive");
+                // Reset inactivity timer (logout after 10 minutes of inactivity)
+                timer = setTimeout(logout, 10 * 60 * 1000);  // 10 minutes
+            }
+
+            // Listen to various user events to reset the inactivity timer
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeydown = resetTimer;
+            document.onscroll = resetTimer;
+            document.onclick = resetTimer;
+        };
+
+        inactivityTime();  // Initialize the inactivity timer
+    </script>
+
+</body>
+
+</html>

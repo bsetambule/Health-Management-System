@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access your account</title>
+
+    <link href="{{url_for('static', filename='styles/account.css')}}" rel="stylesheet" />
+    <!--  <link href="{{url_for('static', filename='styles/customer.css')}}" rel="stylesheet" />
+-->
+    <script>
+        try {
+            if (localStorage.getItem("darkMode") === "enabled") {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        } catch (e) { }
+    </script>
+</head>
+
+<body>
+
+    <!-- Flash Message Section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- TOP NAVIGATION -->
+    <div class="top-nav">
+        <div class="nav-container">
+
+            <!-- Logo -->
+            <div class="logo">
+                <a href="#">
+                    <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <!-- Sign In Section -->
+    <main>
+        <section id="signIn">
+            <h2>Sign in to your account</h2>
+            <form id="signIn-form" method="POST" action="{{ url_for('auth.login') }}">
+
+                <div class="SignInContainer">
+
+                    <div class="createAccountField">
+                        <label>Username</label>
+                        <input type="text" name="username" required>
+                    </div>
+
+                    <br>
+
+                    <div class="createAccountField" style="position: relative;">
+                        <label>Password</label>
+                        <input type="password" id="password" name="password" required>
+
+                        <span class="togglePassword" id="togglePassword"
+                            style="position:absolute; right:10px; top:60%; transform:translateY(-50%); cursor:pointer;">
+                            Show
+                        </span>
+                    </div>
+
+
+                    <br>
+                    <!--<a href="#" class="forgot_password">Forgot password?</a> -->
+                    <a class="forgot_password" href="{{ url_for('auth.forgot_password') }}">Forgot your password?</a>
+                    <br><br>
+                    <button type="submit" id="SignInBtn">Sign In</button>
+                    <br><br>
+                    <p class="createAccountLink">
+                        No account? <a class="createAccount" href="{{ url_for('auth.register') }}">Create Account</a>
+                    </p>
+                </div>
+            </form>
+        </section>
+    </main>
+
+
+    <!--Toggle Password Visibility-->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const togglePassword = document.getElementById("togglePassword");
+            const passwordInput = document.getElementById("password");
+
+            togglePassword.addEventListener("click", function () {
+                const isPassword = passwordInput.type === "password";
+                passwordInput.type = isPassword ? "text" : "password";
+
+                // Change icon
+                this.textContent = isPassword ? "Hide" : "Show";
+            });
+        });
+    </script>
+
+
+
+    <!-- JavaScript for Auto Dismiss Flash Message -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                // Auto-dismiss after 4 seconds
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                // Manual close
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+
+    <!-- JavaScript for Dark Mode Toggle, Hamburger Menu, and Auto Dismiss Flash Message -->
+    <script>
+        const darkToggle = document.getElementById("darkModeToggle");
+        const logo = document.getElementById("siteLogo");
+        const footerLogo = document.getElementById("footerLogo");
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Update logos based on dark mode
+        function updateLogo() {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            logo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+            footerLogo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+        }
+
+        // Dark Mode Toggle
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            darkToggle.checked = true;
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+
+        updateLogo();
+
+        darkToggle.addEventListener("change", () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+            localStorage.setItem("darkMode", isDark ? "disabled" : "enabled");
+
+            updateLogo();
+        });
+
+        // Hamburger Menu Toggle for smaller screens
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            hamburger.classList.toggle("active");
+        });
+    </script>
+
+
+</body>
+
+</html>

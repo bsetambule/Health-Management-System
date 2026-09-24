@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link href="{{ url_for('static', filename='styles/admin.css') }}" rel="stylesheet" />
+    <script>
+        try {
+            if (localStorage.getItem("darkMode") === "enabled") {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        } catch (e) { }
+    </script>
+</head>
+
+<body>
+
+    <!-- Flash Message Section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- TOP NAV -->
+    <div class="topbar">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="#">
+                <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <!-- Hamburger Button for Mobile -->
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="{{ url_for('admin.admin_dash') }}" class="active">Dashboard</a>
+            <a href="{{ url_for('admin.admin_users') }}">Users</a>
+            <a href="{{ url_for('admin.admin_centers') }}">Centers</a>
+            <a href="{{ url_for('admin.admin_reports') }}">Reports</a>
+
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+            <!-- Dark Mode Toggle -->
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle" class="toggle-switch"></label>
+                <span class="toggle-text">Dark Mode</span>
+            </div>
+        </div>
+
+
+        <!-- Main Content -->
+        <div class="main">
+            <section>
+                <h2>Admin Dashboard</h2>
+            </section>
+            <br>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <p>{{ total_users }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Centers</h3>
+                    <p>{{ total_centers }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Centers</h3>
+                    <p>{{ active_centers }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Users</h3>
+                    <p>{{ active_users }}</p>
+                </div>
+            </div>
+
+            <section>
+                <h3>Recently added users</h3>
+                <br>
+                <div class="table-wrapper">
+
+                    <table id="adminUserTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Center</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>{{ user.firstname }} {{ user.lastname }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.role }}</td>
+                                <td>{{ user.center.centerName if user.center else "System" }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" style="text-align: center;">No data found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+
+
+    <!-- FOOTER -->
+    <footer class="indexFooter">
+        <div class="footer-logo">
+            <a href="#">
+                <img id="footerLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <div class="footer-links">
+            <nav>
+                <h4>Important Links</h4>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="{{ url_for('admin.admin_users') }}">Users</a></li>
+                    <li><a href="{{ url_for('admin.admin_centers') }}">Centers</a></li>
+                    <li><a href="{{ url_for('admin.admin_reports') }}">Reports</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <hr>
+
+        <div class="copyright">
+            <p>© SetOhil 2026</p>
+        </div>
+    </footer>
+
+    <!--INACTIVITY SCRIPT-->
+    <script>
+        let inactivityTime = function () {
+            let timer;
+
+            // Function to logout after inactivity
+            const logout = () => {
+                window.location.href = "/logout";  // Redirect to logout
+            }
+
+            // Function to reset the inactivity timer
+            const resetTimer = () => {
+                clearTimeout(timer);
+                // Send request to keep the session alive
+                fetch("/keep_alive");
+                // Reset inactivity timer (logout after 10 minutes of inactivity)
+                timer = setTimeout(logout, 10 * 60 * 1000);  // 10 minutes
+            }
+
+            // Listen to various user events to reset the inactivity timer
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeydown = resetTimer;
+            document.onscroll = resetTimer;
+            document.onclick = resetTimer;
+        };
+
+        inactivityTime();  // Initialize the inactivity timer
+    </script>
+
+
+
+    <!-- JavaScript for Dark Mode Toggle, Hamburger Menu, and Auto Dismiss Flash Message -->
+    <script>
+        const darkToggle = document.getElementById("darkModeToggle");
+        const logo = document.getElementById("siteLogo");
+        const footerLogo = document.getElementById("footerLogo");
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Update logos based on dark mode
+        function updateLogo() {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            logo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+            footerLogo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+        }
+
+        // Dark Mode Toggle
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            darkToggle.checked = true;
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+
+        updateLogo();
+
+        darkToggle.addEventListener("change", () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+            localStorage.setItem("darkMode", isDark ? "disabled" : "enabled");
+
+            updateLogo();
+        });
+
+        // Hamburger Menu Toggle for smaller screens
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            hamburger.classList.toggle("active");
+        });
+    </script>
+
+</body>
+
+</html>

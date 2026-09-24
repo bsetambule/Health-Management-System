@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Prescription</title>
+    <link href="{{ url_for('static', filename='styles/doctor.css') }}" rel="stylesheet" />
+    <script>
+        try {
+            if (localStorage.getItem("darkMode") === "enabled") {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        } catch (e) { }
+    </script>
+</head>
+
+<body>
+
+    <!-- Flash Message Section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- TOP NAV -->
+    <div class="topbar">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="#">
+                <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <!-- Hamburger Button for Mobile -->
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="{{ url_for('doctor.doctor_dash') }}">Dashboard</a>
+            <a href="{{ url_for('doctor.doctor_patients') }}" class="active">Patients</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+            <!-- Dark Mode Toggle -->
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle" class="toggle-switch"></label>
+                <span class="toggle-text">Dark Mode</span>
+            </div>
+        </div>
+
+        <div class="main">
+
+            <section>
+                <div class="backBtn">
+                    <a class="backButton"
+                        href="{{ url_for('doctor.doctor_patient_view', patientID=patient.patientID) }}">
+                        ← Back to Patient Details
+                    </a>
+                </div>
+            </section>
+
+            <section>
+                <h2>Edit Prescription</h2>
+            </section>
+
+            <section>
+                <form class="edit-prescription-form" method="POST"
+                    action="{{ url_for('doctor.edit_prescription', prescriptionID=prescription.prescriptionID) }}">
+
+                    <!-- Read-only info -->
+                    <label>Patient</label>
+                    <input type="text"
+                        value="{{ prescription.patient.user.firstname }} {{ prescription.patient.user.lastname }}"
+                        readonly>
+
+                    <label>Appointment Date</label>
+                    <input type="text"
+                        value="{{ prescription.appointment.appointmentDateTime.strftime('%Y-%m-%d') if prescription.appointment else 'N/A' }}"
+                        readonly>
+
+                    <label>Doctor</label>
+                    <input type="text"
+                        value="Dr. {{ prescription.appointment.doctor.firstname }} {{ prescription.appointment.doctor.lastname }}"
+                        readonly>
+
+                    <hr>
+
+                    <!-- Medications Section -->
+                    <h3>Medications</h3>
+                    <div id="medications-container">
+                        {% for med in prescription.prescriptiondetails %}
+                        <div class="medication-entry">
+                            <label>Medicine Name</label>
+                            <input type="text" name="medicine_name[]" value="{{ med.medicineName }}" required>
+
+                            <label>Dosage</label>
+                            <input type="text" name="dosage[]" value="{{ med.dosage }}" required>
+
+                            <label>Frequency</label>
+                            <select name="frequency[]" required>
+                                <option value="Once daily" {{ 'selected' if med.frequency=='Once daily' else '' }}>
+                                    Once
+                                    daily</option>
+                                <option value="Twice daily" {{ 'selected' if med.frequency=='Twice daily' else '' }}>
+                                    Twice
+                                    daily</option>
+                                <option value="Three times daily" {{ 'selected' if med.frequency=='Three times daily'
+                                    else '' }}>Three times daily</option>
+                            </select>
+
+                            <label>Duration</label>
+                            <input type="text" name="duration[]" value="{{ med.duration }}" required>
+
+                            <label>Instructions</label>
+                            <textarea name="instructions[]">{{ med.instructions }}</textarea>
+
+                            <button type="button" class="remove-medication-btn">Remove</button>
+                            <hr>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="button" id="add-medication-btn">+ Add Medication</button>
+                    <br><br>
+
+                    <button class="saveDiagnosisBtn" type="submit">Save Changes</button>
+                    <a class="cancel-btn"
+                        href="{{ url_for('doctor.doctor_patient_view', patientID=patient.patientID) }}">Cancel</a>
+                </form>
+            </section>
+
+        </div>
+    </div>
+
+
+    <!-- FOOTER -->
+    <footer class="indexFooter">
+        <div class="footer-logo">
+            <a href="#">
+                <img id="footerLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <div class="footer-links">
+            <nav>
+                <h4>Important Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('doctor.doctor_dash')}}">Dashboard</a></li>
+                    <li><a href="#">Patients</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <hr>
+
+        <div class="copyright">
+            <p>© SetOhil 2026</p>
+        </div>
+    </footer>
+
+
+    <!-- JavaScript for Auto Dismiss Flash Message -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                // Auto-dismiss after 4 seconds
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                // Manual close
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+
+    // Dynamic medication fields
+    const container = document.getElementById("medications-container");
+    const addBtn = document.getElementById("add-medication-btn");
+
+    addBtn.addEventListener("click", () => {
+    const div = document.createElement("div");
+    div.classList.add("medication-entry");
+    div.innerHTML = `
+    <label>Medicine Name</label>
+    <input type="text" name="medicine_name[]" required>
+
+    <label>Dosage</label>
+    <input type="text" name="dosage[]" required>
+
+    <label>Frequency</label>
+    <select name="frequency[]" required>
+        <option value="Once daily">Once daily</option>
+        <option value="Twice daily">Twice daily</option>
+        <option value="Three times daily">Three times daily</option>
+    </select>
+
+    <label>Duration</label>
+    <input type="text" name="duration[]" required>
+
+    <label>Instructions</label>
+    <textarea name="instructions[]"></textarea>
+
+    <button type="button" class="remove-medication-btn">Remove</button>
+    <hr>
+    `;
+    container.appendChild(div);
+
+    div.querySelector(".remove-medication-btn").addEventListener("click", () => {
+    div.remove();
+    });
+    });
+
+    // Remove button for existing entries
+    document.querySelectorAll(".remove-medication-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+    e.target.closest(".medication-entry").remove();
+    });
+    });
+    });
+    </script>
+
+    <!-- JavaScript for Dark Mode Toggle, Hamburger Menu, and Auto Dismiss Flash Message -->
+    <script>
+        const darkToggle = document.getElementById("darkModeToggle");
+        const logo = document.getElementById("siteLogo");
+        const footerLogo = document.getElementById("footerLogo");
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Update logos based on dark mode
+        function updateLogo() {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            logo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+            footerLogo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+        }
+
+        // Dark Mode Toggle
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            darkToggle.checked = true;
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+
+        updateLogo();
+
+        darkToggle.addEventListener("change", () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+            localStorage.setItem("darkMode", isDark ? "disabled" : "enabled");
+
+            updateLogo();
+        });
+
+        // Hamburger Menu Toggle for smaller screens
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            hamburger.classList.toggle("active");
+        });
+    </script>
+
+    <!--INACTIVITY SCRIPT-->
+    <script>
+        let inactivityTime = function () {
+            let timer;
+
+            // Function to logout after inactivity
+            const logout = () => {
+                window.location.href = "/logout";  // Redirect to logout
+            }
+
+            // Function to reset the inactivity timer
+            const resetTimer = () => {
+                clearTimeout(timer);
+                // Send request to keep the session alive
+                fetch("/keep_alive");
+                // Reset inactivity timer (logout after 10 minutes of inactivity)
+                timer = setTimeout(logout, 10 * 60 * 1000);  // 10 minutes
+            }
+
+            // Listen to various user events to reset the inactivity timer
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeydown = resetTimer;
+            document.onscroll = resetTimer;
+            document.onclick = resetTimer;
+        };
+
+        inactivityTime();  // Initialize the inactivity timer
+    </script>
+
+</body>
+
+</html>

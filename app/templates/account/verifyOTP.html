@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP</title>
+
+    <link href="{{url_for('static', filename='styles/account.css')}}" rel="stylesheet" />
+
+</head>
+
+<body>
+
+    <!-- Flash Message Section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Header -->
+    <div class="top-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </div>
+        </div>
+
+        <br>
+        <!-- Sign In Section -->
+        <main>
+            <section id="signIn">
+                <h2>Please enter your OTP</h2>
+                <form id="signIn-form" method="POST">
+                    <div class="createAccountField">
+                        <label>OTP</label>
+                        <input type="text" name="otp" pattern="\d{6}" required>
+                    </div>
+                    <br>
+                    <br>
+                    <button id="SignInBtn" type="submit">Countinue</button>
+                </form>
+
+                </form>
+            </section>
+        </main>
+
+
+
+
+        <!-- JavaScript for Auto Dismiss Flash Message -->
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const flashes = document.querySelectorAll(".flash-message");
+
+                flashes.forEach((flash) => {
+                    // Auto-dismiss after 4 seconds
+                    setTimeout(() => {
+                        flash.style.animation = "fadeOut 0.4s ease forwards";
+                        setTimeout(() => flash.remove(), 400);
+                    }, 4000);
+
+                    // Manual close
+                    flash.querySelector(".flash-close").addEventListener("click", () => {
+                        flash.style.animation = "fadeOut 0.4s ease forwards";
+                        setTimeout(() => flash.remove(), 400);
+                    });
+                });
+            });
+        </script>
+
+
+
+</body>
+
+</html>

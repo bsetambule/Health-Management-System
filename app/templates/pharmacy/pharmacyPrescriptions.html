@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pharmacy Prescriptions</title>
+    <link href="{{ url_for('static', filename='styles/pharmacy.css') }}" rel="stylesheet" />
+    <script>
+        try {
+            if (localStorage.getItem("darkMode") === "enabled") {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        } catch (e) { }
+    </script>
+</head>
+
+<body>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span>{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- TOP NAV -->
+    <div class="topbar">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="#">
+                <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <!-- Hamburger Button for Mobile -->
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="{{ url_for('pharmacy.pharmacy_dash') }}">Dashboard</a>
+            <a href="{{ url_for('pharmacy.pharmacy_prescriptions') }}" class="active">Prescriptions</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+            <!-- Dark Mode Toggle -->
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle" class="toggle-switch"></label>
+                <span class="toggle-text">Dark Mode</span>
+            </div>
+        </div>
+
+
+        <!-- Main Content -->
+        <div class="main">
+
+            <section>
+                <div class="backBtn">
+                    <a class="backButton" href="{{ url_for('pharmacy.pharmacy_dash') }}">
+                        ← Back to Dashboard
+                    </a>
+                </div>
+            </section>
+
+
+            <section>
+                <h2>All Prescriptions</h2>
+            </section>
+            <br>
+            <section>
+                <!-- Search -->
+                <input type="search" id="pharmacySearch" placeholder="Search by patient, doctor, medication..."
+                    onkeyup="filterTable('pharmacySearch','prescriptionsTable')">
+
+                <br><br>
+
+                <!-- Table -->
+                <div class="table-wrapper">
+                    <table id="prescriptionsTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Patient</th>
+                                <th>Doctor</th>
+                                <th>Medications</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% if prescriptions.items %}
+                            {% for prescription in prescriptions.items %}
+                            <tr>
+
+                                <!-- Date -->
+                                <td>
+                                    {{ prescription.dateIssued.strftime('%Y-%m-%d') if prescription.dateIssued else '—'
+                                    }}
+                                </td>
+
+                                <!-- Patient -->
+                                <td>
+                                    {% if prescription.patient and prescription.patient.user %}
+                                    {{ prescription.patient.user.firstname }}
+                                    {{ prescription.patient.user.lastname }}
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+
+                                <!-- Doctor -->
+                                <td>
+                                    {% if prescription.doctor %}
+                                    Dr. {{ prescription.doctor.firstname }}
+                                    {{ prescription.doctor.lastname }}
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+
+                                <!-- Medications -->
+                                <td>
+                                    {% for detail in prescription.prescriptiondetails %}
+                                    {{ detail.medicineName }}{% if not loop.last %}, {% endif %}
+                                    {% else %}
+                                    —
+                                    {% endfor %}
+                                </td>
+
+                                <!-- Status -->
+                                <td>
+
+                                    {{ prescription.status.value if prescription.status }}
+
+                                </td>
+
+                                <!-- Action -->
+                                <td>
+                                    <a class="backButton"
+                                        href="{{ url_for('pharmacy.pharmacy_prescriptionView', prescription_id=prescription.prescriptionID) }}">
+                                        View
+                                    </a>
+                                </td>
+
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="6" style="text-align:center;">
+                                    No prescriptions found.
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                {% if prescriptions.has_prev %}
+                <a
+                    href="{{ url_for('pharmacy.pharmacy.prescriptions', page=pharmacy.pharmacy.prescriptions.prev_num) }}">←
+                    Previous</a>
+                {% endif %}
+
+                <span>Page {{ prescriptions.page }} of {{ prescriptions.pages }}</span>
+
+                {% if prescriptions.has_next %}
+                <a
+                    href="{{ url_for('pharmacy.pharmacy.prescriptions', page=pharmacy.pharmacy.prescriptions.next_num) }}">Next
+                    →</a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="indexFooter">
+        <div class="footer-logo">
+            <a href="#">
+                <img id="footerLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <div class="footer-links">
+            <nav>
+                <h4>Important Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('pharmacy.pharmacy_dash') }}">Home</a></li>
+                    <li><a href="#">Prescriptions</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <hr>
+
+        <div class="copyright">
+            <p>© SetOhil 2026</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Auto Dismiss Flash Message -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                // Auto-dismiss after 4 seconds
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                // Manual close
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+
+    <!-- JavaScript for Dark Mode Toggle, Hamburger Menu, and Auto Dismiss Flash Message -->
+    <script>
+        const darkToggle = document.getElementById("darkModeToggle");
+        const logo = document.getElementById("siteLogo");
+        const footerLogo = document.getElementById("footerLogo");
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Update logos based on dark mode
+        function updateLogo() {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            logo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+            footerLogo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+        }
+
+        // Dark Mode Toggle
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            darkToggle.checked = true;
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+
+        updateLogo();
+
+        darkToggle.addEventListener("change", () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+            localStorage.setItem("darkMode", isDark ? "disabled" : "enabled");
+
+            updateLogo();
+        });
+
+        // Hamburger Menu Toggle for smaller screens
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            hamburger.classList.toggle("active");
+        });
+    </script>
+
+    <!-- Search Script -->
+    <script>
+        function filterTable(inputId, tableId) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById(tableId);
+            const rows = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < rows.length; i++) {
+                const rowText = rows[i].textContent.toLowerCase();
+                rows[i].style.display = rowText.includes(filter) ? "" : "none";
+            }
+        }
+    </script>
+
+    <!-- Flash Auto Dismiss -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+
+    <!--INACTIVITY SCRIPT-->
+    <script>
+        let inactivityTime = function () {
+            let timer;
+
+            // Function to logout after inactivity
+            const logout = () => {
+                window.location.href = "/logout";  // Redirect to logout
+            }
+
+            // Function to reset the inactivity timer
+            const resetTimer = () => {
+                clearTimeout(timer);
+                // Send request to keep the session alive
+                fetch("/keep_alive");
+                // Reset inactivity timer (logout after 10 minutes of inactivity)
+                timer = setTimeout(logout, 10 * 60 * 1000);  // 10 minutes
+            }
+
+            // Listen to various user events to reset the inactivity timer
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeydown = resetTimer;
+            document.onscroll = resetTimer;
+            document.onclick = resetTimer;
+        };
+
+        inactivityTime();  // Initialize the inactivity timer
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Assign Manager</title>
+    <link href="{{url_for('static', filename='styles/admin.css')}}" rel="stylesheet" />
+    <script>
+        try {
+            if (localStorage.getItem("darkMode") === "enabled") {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        } catch (e) { }
+    </script>
+</head>
+
+<body>
+
+    <!-- Flash Message Section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- TOP NAV -->
+    <div class="topbar">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="#">
+                <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <!-- Hamburger Button for Mobile -->
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="{{ url_for('admin.admin_dash') }}">Dashboard</a>
+            <a href="{{ url_for('admin.admin_users') }}">Users</a>
+            <a href="{{ url_for('admin.admin_centers') }}" class="active">Centers</a>
+            <a href="{{ url_for('admin.admin_reports') }}">Reports</a>
+
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+            <!-- Dark Mode Toggle -->
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle" class="toggle-switch"></label>
+                <span class="toggle-text">Dark Mode</span>
+            </div>
+        </div>
+
+
+        <div class="main">
+            <section>
+                <h2>Assign Center Manager for {{ center.name }}</h2>
+            </section>
+
+            <section class="form-card">
+                <form class="centerManager-form" method="POST">
+
+
+
+                    <div class="createCenterManagerField">
+                        <label>Center</label>
+                        <input type="text" value="{{ center.centerName }}" disabled>
+                    </div>
+
+                    <!-- Manager details -->
+                    <div class="createCenterManagerField">
+                        <label>First Name</label>
+                        <input type="text" name="first_name" required>
+                    </div>
+
+                    <div class="createCenterManagerField">
+                        <label>Last Name</label>
+                        <input type="text" name="last_name" required>
+                    </div>
+
+
+                    <div class="createCenterManagerField">
+                        <label>Phone Number</label>
+                        <div class="phoneinput">
+                            <span id="countrycode">+267</span>
+                            <input type="tel" id="phone" name="phone" pattern="7[0-9]{7}" maxlength="8"
+                                inputmode="numeric" required>
+                        </div>
+                        <small id="phoneError" style="color: #ff0000;"></small>
+                    </div>
+
+                    <div class="createCenterManagerField">
+                        <label>Email Address</label>
+                        <input type="email" name="email" id="email" required>
+                        <small id="emailError" style="color:red;"></small>
+                    </div>
+
+                    <div class="createCenterManagerField">
+                        <!-- Username preview (auto-generated) -->
+                        <label>Username (auto-generated)</label>
+                        <input type="text" value="{{ generated_username }}" disabled>
+                    </div>
+
+                    <br><br>
+                    <button class="createCenterManagerBtn" type="submit">Assign Manager</button>
+                    <a class="cancelBtn" href="{{ url_for('admin.admin_centers') }}">Cancel</a>
+
+
+                </form>
+            </section>
+
+
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="indexFooter">
+        <div class="footer-logo">
+            <a href="#">
+                <img id="footerLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <div class="footer-links">
+            <nav>
+                <h4>Important Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('admin.admin_dash')}}">Home</a></li>
+                    <li><a href="{{ url_for('admin.admin_users') }}">Users</a></li>
+                    <li><a href="#">Centers</a></li>
+                    <li><a href="{{ url_for('admin.admin_reports') }}">Reports</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <hr>
+
+        <div class="copyright">
+            <p>© SetOhil 2026</p>
+        </div>
+    </footer>
+
+
+    <!--INACTIVITY SCRIPT-->
+    <script>
+        let inactivityTime = function () {
+            let timer;
+
+            // Function to logout after inactivity
+            const logout = () => {
+                window.location.href = "/logout";  // Redirect to logout
+            }
+
+            // Function to reset the inactivity timer
+            const resetTimer = () => {
+                clearTimeout(timer);
+                // Send request to keep the session alive
+                fetch("/keep_alive");
+                // Reset inactivity timer (logout after 10 minutes of inactivity)
+                timer = setTimeout(logout, 10 * 60 * 1000);  // 10 minutes
+            }
+
+            // Listen to various user events to reset the inactivity timer
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeydown = resetTimer;
+            document.onscroll = resetTimer;
+            document.onclick = resetTimer;
+        };
+
+        inactivityTime();  // Initialize the inactivity timer
+    </script>
+
+
+
+
+    <!--Script for phone number and email-->
+    <script>
+        const phoneInput = document.getElementById("phone");
+        const phoneError = document.getElementById("phoneError");
+
+        phoneInput.addEventListener("input", () => {
+            const value = phoneInput.value.trim();
+
+            // Check if it starts with 7
+            if (!/^7\d{7}$/.test(value)) {
+                phoneError.textContent = "Phone number must start with 7 and be exactly 8 digits.";
+                phoneInput.setCustomValidity("Invalid phone number");
+            } else {
+                phoneError.textContent = "";
+                phoneInput.setCustomValidity(""); // reset validity
+            }
+        });
+
+        // Email validation
+        const email = document.getElementById("email");
+        const emailError = document.getElementById("emailError");
+        email.addEventListener("input", () => {
+            if (email.validity.typeMismatch) {
+                emailError.textContent = "Please enter a valid email address";
+            } else {
+                emailError.textContent = "";
+            }
+        });
+
+    </script>
+
+    <!-- JavaScript for Auto Dismiss Flash Message -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                // Auto-dismiss after 4 seconds
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                // Manual close
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+
+    <!-- JavaScript for Dark Mode Toggle, Hamburger Menu, and Auto Dismiss Flash Message -->
+    <script>
+        const darkToggle = document.getElementById("darkModeToggle");
+        const logo = document.getElementById("siteLogo");
+        const footerLogo = document.getElementById("footerLogo");
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Update logos based on dark mode
+        function updateLogo() {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            logo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+            footerLogo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+        }
+
+        // Dark Mode Toggle
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            darkToggle.checked = true;
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+
+        updateLogo();
+
+        darkToggle.addEventListener("change", () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+            localStorage.setItem("darkMode", isDark ? "disabled" : "enabled");
+
+            updateLogo();
+        });
+
+        // Hamburger Menu Toggle for smaller screens
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            hamburger.classList.toggle("active");
+        });
+    </script>
+</body>
+
+</html>

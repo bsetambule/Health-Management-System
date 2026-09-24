@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <title>System Centers</title>
+    <link href="{{url_for('static', filename='styles/admin.css')}}" rel="stylesheet" />
+    <script>
+        try {
+            if (localStorage.getItem("darkMode") === "enabled") {
+                document.documentElement.setAttribute("data-theme", "dark");
+            }
+        } catch (e) { }
+    </script>
+</head>
+
+<body>
+
+    <!-- Flash Message Section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- TOP NAV -->
+    <div class="topbar">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="#">
+                <img id="siteLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <!-- Hamburger Button for Mobile -->
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="{{ url_for('admin.admin_dash') }}">Dashboard</a>
+            <a href="{{ url_for('admin.admin_users') }}">Users</a>
+            <a href="{{ url_for('admin.admin_centers') }}" class="active">Centers</a>
+            <a href="{{ url_for('admin.admin_reports') }}">Reports</a>
+
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+            <!-- Dark Mode Toggle -->
+            <div class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <label for="darkModeToggle" class="toggle-switch"></label>
+                <span class="toggle-text">Dark Mode</span>
+            </div>
+        </div>
+
+
+        <div class="main">
+
+            <section>
+                <div class="backBtn">
+                    <a class="backButton" href="{{ url_for('admin.admin_dash') }}">
+                        ← Back to Dashboard
+                    </a>
+                </div>
+            </section>
+
+            <section>
+                <h2>All Centers</h2>
+            </section>
+
+            <section>
+                <a class="newCenterBtn" href="{{ url_for('admin.admin_createCenter') }}">
+                    New Center
+                </a>
+            </section>
+
+            <section id="usersSection">
+
+                <input type="text" id="adminCentersSearch" placeholder="Search center by ID or name..."
+                    onkeyup="filterTable('adminCentersSearch', 'adminCentersTable')">
+
+                <!-- No results found message -->
+                <div id="noResultsMessage" style="display:none; color: red; text-align: center;">
+                    No results found.
+                </div>
+
+                <br><br>
+                <div class="table-wrapper">
+                    <table id="adminCentersTable">
+                        <thead>
+                            <tr>
+                                <th>Center ID</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Address</th>
+                                <th>Center Manager</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for center in centers.items %}
+                            <tr>
+                                <td>{{ center.centerID }}</td>
+                                <td>{{ center.centerName }}</td>
+                                <td>{{ center.centerType }}</td>
+                                <td>{{ center.centerLocation }}</td>
+                                <td>
+                                    {{ center.centerManager}}
+                                <td>
+                                    <div class="container-buttons">
+                                        <a class="adminUserViewLink"
+                                            href="{{ url_for('admin.assign_manager', centerID=center.centerID) }}">
+                                            Assign Manager
+                                        </a>
+
+                                        <!-- Form for Deaassigning Center Manager -->
+                                        <form method="POST"
+                                            action="{{ url_for('admin.deassign_manager', centerID=center.centerID) }}">
+                                            {% if center.isActive %}
+                                            <button type="submit" class="deassignManagerLink">
+                                                Deassign Manager
+                                            </button>
+                                            {% else %}
+                                            <button type="submit" class="deassignManagerLink" disabled>
+                                                Deassign Manager
+                                            </button>
+                                            {% endif %}
+                                        </form>
+
+
+                                        <a class="adminUserViewLink"
+                                            href="{{ url_for('admin.admin_center_view', center_id=center.centerID) }}">
+                                            View Center
+                                        </a>
+                                    </div>
+                                </td>
+
+                            </tr>
+                            {% endfor %}
+
+                            {% if centers.items|length == 0 %}
+                            <tr>
+                                <td colspan="6" style="text-align: center;">No centers found.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </section>
+            <!-- Pagination -->
+            <div class="pagination">
+                {% if centers.has_prev %}
+                <a href="{{ url_for('admin.admin_centers', page=centers.prev_num) }}">← Previous</a>
+                {% endif %}
+
+                <span>Page {{ centers.page }} of {{ centers.pages }}</span>
+
+                {% if centers.has_next %}
+                <a href="{{ url_for('admin.admin_centers', page=centers.next_num) }}">Next →</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+    <!-- FOOTER -->
+    <footer class="indexFooter">
+        <div class="footer-logo">
+            <a href="#">
+                <img id="footerLogo" src="{{ url_for('static', filename='images/logo4.jpeg') }}" alt="SetOhil Logo">
+            </a>
+        </div>
+
+        <div class="footer-links">
+            <nav>
+                <h4>Important Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('admin.admin_dash')}}">Home</a></li>
+                    <li><a href="{{ url_for('admin.admin_users') }}">Users</a></li>
+                    <li><a href="#">Centers</a></li>
+                    <li><a href="{{ url_for('admin.admin_reports') }}">Reports</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <hr>
+
+        <div class="copyright">
+            <p>© SetOhil 2026</p>
+        </div>
+    </footer>
+
+
+    <!--INACTIVITY SCRIPT-->
+    <script>
+        let inactivityTime = function () {
+            let timer;
+
+            // Function to logout after inactivity
+            const logout = () => {
+                window.location.href = "/logout";  // Redirect to logout
+            }
+
+            // Function to reset the inactivity timer
+            const resetTimer = () => {
+                clearTimeout(timer);
+                // Send request to keep the session alive
+                fetch("/keep_alive");
+                // Reset inactivity timer (logout after 10 minutes of inactivity)
+                timer = setTimeout(logout, 10 * 60 * 1000);  // 10 minutes
+            }
+
+            // Listen to various user events to reset the inactivity timer
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeydown = resetTimer;
+            document.onscroll = resetTimer;
+            document.onclick = resetTimer;
+        };
+
+        inactivityTime();  // Initialize the inactivity timer
+    </script>
+
+
+
+    <!--Search-->
+    <script>
+        function filterTable(inputId, tableId) {
+            const input = document.getElementById(inputId);
+            const tokens = input.value
+                .toLowerCase()
+                .trim()
+                .split(/\s+/); // Split by spaces
+
+            const table = document.getElementById(tableId);
+            const rows = table.getElementsByTagName("tr");
+
+            let noMatchFound = true; // Track if any row matches the search
+
+            // Iterate through the rows (skip the header)
+            for (let i = 1; i < rows.length; i++) {
+                const rowText = rows[i].textContent.toLowerCase();
+                const match = tokens.every(token => rowText.includes(token));
+
+                if (match) {
+                    rows[i].style.display = "";  // Show row if matched
+                    noMatchFound = false;  // Found a match
+                } else {
+                    rows[i].style.display = "none";  // Hide row if not matched
+                }
+            }
+
+            // Show "No results found" message if no rows match
+            const noResultsMessage = document.getElementById("noResultsMessage");
+            if (noMatchFound) {
+                noResultsMessage.style.display = "block";  // Display message
+            } else {
+                noResultsMessage.style.display = "none";  // Hide message
+            }
+        }
+    </script>
+
+
+
+    <!-- JavaScript for Auto Dismiss Flash Message -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashes = document.querySelectorAll(".flash-message");
+
+            flashes.forEach((flash) => {
+                // Auto-dismiss after 4 seconds
+                setTimeout(() => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                }, 4000);
+
+                // Manual close
+                flash.querySelector(".flash-close").addEventListener("click", () => {
+                    flash.style.animation = "fadeOut 0.4s ease forwards";
+                    setTimeout(() => flash.remove(), 400);
+                });
+            });
+        });
+    </script>
+
+    <!-- JavaScript for Dark Mode Toggle, Hamburger Menu, and Auto Dismiss Flash Message -->
+    <script>
+        const darkToggle = document.getElementById("darkModeToggle");
+        const logo = document.getElementById("siteLogo");
+        const footerLogo = document.getElementById("footerLogo");
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".sidebar");
+
+        // Update logos based on dark mode
+        function updateLogo() {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            logo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+            footerLogo.src = isDark ? "{{ url_for('static', filename='images/logo2.png') }}"
+                : "{{ url_for('static', filename='images/logo4.jpeg') }}";
+        }
+
+        // Dark Mode Toggle
+        if (localStorage.getItem("darkMode") === "enabled") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            darkToggle.checked = true;
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+        }
+
+        updateLogo();
+
+        darkToggle.addEventListener("change", () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+            localStorage.setItem("darkMode", isDark ? "disabled" : "enabled");
+
+            updateLogo();
+        });
+
+        // Hamburger Menu Toggle for smaller screens
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            hamburger.classList.toggle("active");
+        });
+    </script>
+
+</body>
+
+</html>
